@@ -41,7 +41,11 @@ function runSpawn(myarg) {
 
 
 let funsList = {
-    async buildFrontend() {
+    /**
+     * 
+     * @param {string} needreload 
+     */
+    async buildFrontend(needreload) {
         console.log("build frontend");
         await esbuild.build({
             entryPoints: ['./frontend/src/main.ts'],
@@ -58,11 +62,16 @@ let funsList = {
                 'process.env.AUTORELOAD_PORT': JSON.stringify(AUTORELOAD_PORT),
             },
         });
+
+        
+        console.log("build frontend finish");
+        if(!needreload) return;
+
+        console.log("refresh page");
         callReloadServer(AUTORELOAD_PORT);
 
-    },
-
-    async buildBackend() {
+    }, 
+    async buildBackend(needreload) {
         console.log("build backend");
         await esbuild.build({
             entryPoints: ['./backend/src/main.ts'],
@@ -72,9 +81,14 @@ let funsList = {
             platform: "node"
         });
 
+        console.log("build backend finish");
     },
 
-    runServer() {
+    /**
+     * 
+     * @param {boolean} needreload 
+     */
+    runServer(needreload) {
 
         console.log("run server");
         runSpawn({
@@ -82,13 +96,15 @@ let funsList = {
             bin:"node",
             arg: ["./output/app.js"]
         });
+
+        if(!needreload) return;
         callReloadServer(AUTORELOAD_PORT);
     },
     watchServer() { 
         nodemon({
             watch: ["./output/app.js"],
             ext: "js",
-            exec: "node " + myfile + " -f runServer",
+            exec: "node " + myfile + " -f runServer -a refresh",
 
         });
     },
@@ -97,7 +113,7 @@ let funsList = {
         nodemon({
             watch: ["./frontend/src/"],
             ext: "js,ts,vue,html,css",
-            exec: "node " + myfile + " -f buildFrontend"
+            exec: "node " + myfile + " -f buildFrontend -a refresh"
         });
     },
 
@@ -106,7 +122,7 @@ let funsList = {
         nodemon({
             watch: ["./backend/src/"],
             ext: "js,ts,vue,html,css",
-            exec: "node " + myfile + " -f buildBackend"
+            exec: "node " + myfile + " -f buildBackend -a refresh"
         });
     },
 
@@ -128,6 +144,11 @@ let funsList = {
             arg:[ myfile,"-f","watchBackend"]
         }); 
 
+    },
+
+    async buildAll(){
+        await this.buildFrontend(null);
+        await this.buildBackend();
     }
 
 }
@@ -137,12 +158,13 @@ let funsList = {
 
 
 function readArg() {
-    /** @type {{fun : string} | null} */
+    /** @type {{fun : string, arg : string} | null} */
     let result = {};
 
     const program = new Command();
     program
-        .option('-f, --fun <string>', 'call any function from funsList ', "");
+        .option('-f, --fun <string>', 'call any function from funsList ', "")
+        .option('-a, --arg <string>', 'argument for function ', null);
 
     program.parse(process.argv);
     result = program.opts();
@@ -156,21 +178,21 @@ function readArg() {
 
 function run() {
     let argResult = readArg();
-    let arg = argResult.result;
-    if (arg == null ||
-        arg.fun == null ||
-        arg.fun == ""
+    let parsedCommandArg = argResult.result;
+    if (parsedCommandArg == null ||
+        parsedCommandArg.fun == null ||
+        parsedCommandArg.fun == ""
     ) {
         console.log("Please use option -f or --fun");
         argResult.program.help();
         return;
     }
 
-    console.log(arg);
+    console.log(parsedCommandArg);
 
-    let fun = arg.fun;
+    let fun = parsedCommandArg.fun;
     if (funsList[fun] != null) {
-        funsList[fun]();
+        funsList[fun](parsedCommandArg.arg);
     }
 
 }

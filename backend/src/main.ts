@@ -12,6 +12,7 @@ const port = process.env.SERVERPORT || '3030';
 app.use(express.static(join(__dirname, 'public')));
 
 let portNum = Number(port);
+ 
 // Menjalankan server pada port yang ditentukan
 app.listen(port, () => {
   console.log(`Server url : http://localhost:${port}`);

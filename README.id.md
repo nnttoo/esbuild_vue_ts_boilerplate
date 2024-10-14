@@ -48,3 +48,10 @@ kemudian jalankan perintah berikut ini :
 ./esbuild.mjs -f buildAll
 
 ```
+
+Untuk menjalankan server anda bisa mengetikan perintah berikut ini :
+
+```sh
+    ./esbuild.mjs -f runServer
+
+```

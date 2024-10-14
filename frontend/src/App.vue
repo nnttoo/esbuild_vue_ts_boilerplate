@@ -2,7 +2,7 @@
 </script>
 
 <template>
-  <h1>Simple Page Reloader example</h1> 
+  <h1>Simple Page Reloader example</h1>  
   <div>test Auto Reload</div> 
 </template> 
 <style scoped>
