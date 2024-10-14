@@ -188,7 +188,10 @@ let funsList = {
      */
     runServer(needreload) {
 
+        let iswatch = needreload != null;
         runServer();
+
+        if(!iswatch) return;
         callReloadServer(AUTORELOAD_PORT);
     },
     watchHtml() { 
