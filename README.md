@@ -1,6 +1,6 @@
  
 
-# ESBuild Vue Ts Boilerplate
+# ESBuild Vue Typescript Boilerplate
 
 
 --- 
