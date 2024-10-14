@@ -5,9 +5,7 @@ import vuePlugin from 'esbuild-plugin-vue3';
 import { Command } from "commander";
 import dotenv from "dotenv"; 
 import { callReloadServer, createServer } from "simplepagereloader/server"
-import chokidar from "chokidar"
-
-import { fileURLToPath } from 'url';
+import chokidar from "chokidar" 
 dotenv.config();
 
 import { spawn } from 'child_process';
@@ -15,9 +13,7 @@ import { spawn } from 'child_process';
 
 
 const NODE_ENV = process.env.NODE_ENV || 'development';
-const AUTORELOAD_PORT = Number(process.env.AUTORELOAD_PORT || '9090');
-const myfile = fileURLToPath(import.meta.url);
-
+const AUTORELOAD_PORT = Number(process.env.AUTORELOAD_PORT || '9090'); 
 
 
 
@@ -40,6 +36,19 @@ function restartServer(){
     if(serverSpawn == null) return;
     serverSpawn.stop();
     runServer();
+}
+
+function watchHtml() { 
+    let watcher  = chokidar.watch([ 
+        "./output/public/index.html"
+    ],{
+        persistent : true
+    });
+
+    watcher.on("change",()=>{
+        console.log("html change")
+        callReloadServer(AUTORELOAD_PORT);
+    })
 }
 
 /**
@@ -181,36 +190,16 @@ let funsList = {
             console.log("build");
         }
     },
-
-    /**
-     * 
-     * @param {boolean} needreload 
-     */
-    runServer(needreload) {
-
-        let iswatch = needreload != null;
-        runServer();
-
-        if(!iswatch) return;
-        callReloadServer(AUTORELOAD_PORT);
+ 
+    runServer( ) { 
+        runServer(); 
     },
-    watchHtml() { 
-        let watcher  = chokidar.watch([ 
-            "./output/public/index.html"
-        ],{
-            persistent : true
-        });
-
-        watcher.on("change",()=>{
-            console.log("html change")
-            callReloadServer(AUTORELOAD_PORT);
-        })
-    },
+    
 
     async runWatch() {
         createServer(AUTORELOAD_PORT);
         runServer();
-        this.watchHtml();
+        watchHtml();
         this.buildFrontend("refresh");
         this.buildBackend("refresh");
 
