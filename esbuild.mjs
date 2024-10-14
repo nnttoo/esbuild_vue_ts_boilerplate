@@ -24,7 +24,7 @@ function runSpawn(myarg) {
     const command = spawn(myarg.bin, myarg.arg);
  
     let print = (msgIn)=>{ 
-        let msg = msgIn+""; 
+        let msg = msgIn+"";  
         msg = msg.trim();
         console.log(`[${myarg.name}] ${msg}`);
     } 
