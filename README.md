@@ -1,15 +1,19 @@
+ 
 
 # ESBuild Vue Ts Boilerplate
 
-Ini adalah boilerplate untuk project yang menggunakan esbuild, Vue.js dengan typescript
 
-clone git ini
+--- 
+
+This is a boilerplate for projects using esbuild, Vue.js with TypeScript.
+
+Clone this repository:
 
 ```sh
     git clone git@github.com:nnttoo/esbuild_vue_ts_boilerplate.git
 ```
 
-dan jalankan 
+Then, run:
 
 ```sh 
     npm install
@@ -17,16 +21,15 @@ dan jalankan
 
 ## Hot Reload
 
-Browser otomatis refresh ketika terjadi perubahan baik di folder backend maupun frontend, untuk memulainya anda bisa menggunakan command berikut ini :
+The browser will automatically refresh when changes occur in either the backend or frontend folder. To start the hot reload, you can use the following command:
 
 ```sh
     node ./esbuild.mjs -f runWatch
 ```
 
+## Configuration
 
-## Konfigurasi
-
-Anda bisa menyesuaikan beberapa konfigurasi, dengan mengedit file esbuild.mjs atau dengan mengedit .env
+You can customize several settings by editing the `esbuild.mjs` file or by modifying the `.env` file:
 
 ```env
 NODE_ENV="development"
@@ -34,17 +37,22 @@ SERVERPORT="6767"
 AUTORELOAD_PORT="7878"
 ```
 
-## Build untuk production
+## Production Build
 
-untuk membuild versi production edit file .env dan ubah
+To build the production version, edit the `.env` file and change:
 
 ```sh
 NODE_ENV="production"
 ```
 
-kemudian jalankan perintah berikut ini :
+Then, run the following command:
 
 ```sh
 ./esbuild.mjs -f buildAll
+```
 
+To start the server, you can run this command:
+
+```sh
+    ./esbuild.mjs -f runServer
 ```
