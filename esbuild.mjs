@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 import * as esbuild from 'esbuild'
+import fs from "fs/promises"
 import vuePlugin from 'esbuild-plugin-vue3';
-import { Command } from "commander"; 
+import { Command } from "commander";
 import dotenv from "dotenv";
 import nodemon from 'nodemon';
 import { callReloadServer, createServer } from "simplepagereloader/server"
+
 import { fileURLToPath } from 'url';
 dotenv.config();
 
@@ -22,18 +24,18 @@ const myfile = fileURLToPath(import.meta.url);
  */
 function runSpawn(myarg) {
     const command = spawn(myarg.bin, myarg.arg);
- 
-    let print = (msgIn)=>{ 
-        let msg = msgIn+"";  
+
+    let print = (msgIn) => {
+        let msg = msgIn + "";
         msg = msg.trim();
         console.log(`[${myarg.name}] ${msg}`);
-    } 
-    command.stdout.on('data', (data) => { 
+    }
+    command.stdout.on('data', (data) => {
         print(data);
-    }); 
+    });
     command.stderr.on('data', (data) => {
         print(data);
-    }); 
+    });
     command.on('close', (code) => {
         print(code);
     });
@@ -46,42 +48,102 @@ let funsList = {
      * @param {string} needreload 
      */
     async buildFrontend(needreload) {
-        console.log("build frontend");
-        await esbuild.build({
-            entryPoints: ['./frontend/src/main.ts'],
+
+        let iswatch = needreload != null;
+        
+        let isreadyInjected = false;
+ 
+        /** @type {esbuild.BuildOptions} */
+        let buildOption = {
+            entryPoints: ["frontend/src/main.ts"],
             bundle: true,
             outfile: './output/public/app.js',
             minify: true,
             platform: "browser",
             plugins: [
-                vuePlugin()
+                vuePlugin(),
+                {
+                    name: 'rebuild-notify',
+                    setup(build) {
+
+                        build.onLoad({ filter: /.ts/gi }, async (args) => {  
+                            if (!iswatch) return; 
+                            if(isreadyInjected) return;
+
+                            isreadyInjected = true;
+                            let ctn = await fs.readFile(args.path);
+                            ctn += ` 
+                            import {simplePageReload} from "simplepagereloader/client";  
+                            simplePageReload(${AUTORELOAD_PORT}); 
+                            `
+
+                            return {
+                                contents: ctn.toString(),
+                                loader: "ts"
+                            }
+                        });
+                        build.onEnd(result => {
+                            isreadyInjected = false;
+                            console.log(`build ended with ${result.errors.length} errors`);
+                            if (iswatch) {
+
+                                console.log("refresh page");
+                                callReloadServer(AUTORELOAD_PORT);
+                            }
+
+                        })
+                    },
+                }
             ],
 
             define: {
-                'process.env.NODE_ENV': JSON.stringify(NODE_ENV),
-                'process.env.AUTORELOAD_PORT': JSON.stringify(AUTORELOAD_PORT),
+                'process.env.NODE_ENV': JSON.stringify(NODE_ENV), 
             },
-        });
+        }
 
-        
-        console.log("build frontend finish");
-        if(!needreload) return;
+        if (iswatch) {
+            console.log("watch");
+            let es = await esbuild.context(buildOption);
+            es.watch();
+        } else {
+            await esbuild.build(buildOption);
+            console.log("rebuild");
 
-        console.log("refresh page");
-        callReloadServer(AUTORELOAD_PORT);
+        }
 
-    }, 
+    },
     async buildBackend(needreload) {
         console.log("build backend");
-        await esbuild.build({
+        let iswatch = needreload != null;
+
+        /** @type {esbuild.BuildOptions} */
+        let buildOption = {
             entryPoints: ['./backend/src/main.ts'],
             bundle: true,
             outfile: './output/app.js',
             minify: true,
-            platform: "node"
-        });
+            platform: "node",
+            plugins: [
+                {
+                    name: 'rebuild-notify',
+                    setup(build) {
+                        build.onEnd(result => {
+                            console.log(`buildBackend ended with ${result.errors.length} errors`); 
+                        })
+                    },
+                }
+            ]
+        };
 
-        console.log("build backend finish");
+
+        if (iswatch) {
+            console.log("watch");
+            let es = await esbuild.context(buildOption);
+            es.watch();
+        } else {
+            await esbuild.build(buildOption);
+            console.log("build");
+        }
     },
 
     /**
@@ -92,63 +154,33 @@ let funsList = {
 
         console.log("run server");
         runSpawn({
-            name:"server",
-            bin:"node",
+            name: "server",
+            bin: "node",
             arg: ["./output/app.js"]
         });
 
-        if(!needreload) return;
+        if (!needreload) return;
         callReloadServer(AUTORELOAD_PORT);
     },
-    watchServer() { 
+    watchServer() {
         nodemon({
             watch: ["./output/app.js"],
             ext: "js",
             exec: "node " + myfile + " -f runServer -a refresh",
-
-        });
-    },
-
-    watchFrontend() {
-        nodemon({
-            watch: ["./frontend/src/"],
-            ext: "js,ts,vue,html,css",
-            exec: "node " + myfile + " -f buildFrontend -a refresh"
-        });
-    },
-
-    
-    watchBackend() {
-        nodemon({
-            watch: ["./backend/src/"],
-            ext: "js,ts,vue,html,css",
-            exec: "node " + myfile + " -f buildBackend -a refresh"
         });
     },
 
     async runWatch() {
         createServer(AUTORELOAD_PORT);
-        runSpawn({
-            name: "watchServer",
-            bin:"node",
-            arg:[ myfile,"-f","watchServer"]
-        });
-        runSpawn({
-            name: "watchFrontend",
-            bin:"node",
-            arg:[ myfile,"-f","watchFrontend"]
-        }); 
-        runSpawn({
-            name: "watchBackend",
-            bin:"node",
-            arg:[ myfile,"-f","watchBackend"]
-        }); 
+        this.watchServer();
+        this.buildFrontend("refresh");
+        this.buildBackend("refresh");
 
     },
 
-    async buildAll(){
+    async buildAll() {
         await this.buildFrontend(null);
-        await this.buildBackend();
+        await this.buildBackend(null);
     }
 
 }

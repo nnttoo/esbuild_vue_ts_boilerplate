@@ -2,8 +2,8 @@
 </script>
 
 <template>
-  <h1>Simple Page Reloader example</h1>   
-  <div>test Auto Reload</div> 
+  <h1>Test Fast ddd Reloader</h1>    
+  <div>test very Reload</div> 
 </template> 
 <style scoped>
 .logo {
