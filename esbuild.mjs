@@ -3,9 +3,9 @@ import * as esbuild from 'esbuild'
 import fs from "fs/promises"
 import vuePlugin from 'esbuild-plugin-vue3';
 import { Command } from "commander";
-import dotenv from "dotenv";
-import nodemon from 'nodemon';
+import dotenv from "dotenv"; 
 import { callReloadServer, createServer } from "simplepagereloader/server"
+import chokidar from "chokidar"
 
 import { fileURLToPath } from 'url';
 dotenv.config();
@@ -17,6 +17,30 @@ import { spawn } from 'child_process';
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const AUTORELOAD_PORT = Number(process.env.AUTORELOAD_PORT || '9090');
 const myfile = fileURLToPath(import.meta.url);
+
+
+
+
+/**
+ * @typedef {{stop : ()=>void}} SpawnTools
+ */
+
+/** @type {SpawnTools | null} */
+let serverSpawn = null;
+
+function runServer(){
+    console.log("run server");
+    serverSpawn = runSpawn({
+        name: "server",
+        bin: "node",
+        arg: ["./output/app.js"]
+    });
+}
+function restartServer(){
+    if(serverSpawn == null) return;
+    serverSpawn.stop();
+    runServer();
+}
 
 /**
  * 
@@ -39,6 +63,15 @@ function runSpawn(myarg) {
     command.on('close', (code) => {
         print(code);
     });
+
+    /** @type {SpawnTools} */
+    let result = {
+        stop(){
+            command.kill();
+        }
+    }
+
+    return result;
 }
 
 
@@ -129,6 +162,9 @@ let funsList = {
                     setup(build) {
                         build.onEnd(result => {
                             console.log(`buildBackend ended with ${result.errors.length} errors`); 
+
+                            if(!iswatch) return;
+                            restartServer();
                         })
                     },
                 }
@@ -152,27 +188,26 @@ let funsList = {
      */
     runServer(needreload) {
 
-        console.log("run server");
-        runSpawn({
-            name: "server",
-            bin: "node",
-            arg: ["./output/app.js"]
-        });
-
-        if (!needreload) return;
+        runServer();
         callReloadServer(AUTORELOAD_PORT);
     },
-    watchServer() {
-        nodemon({
-            watch: ["./output/app.js"],
-            ext: "js",
-            exec: "node " + myfile + " -f runServer -a refresh",
+    watchHtml() { 
+        let watcher  = chokidar.watch([ 
+            "./output/public/index.html"
+        ],{
+            persistent : true
         });
+
+        watcher.on("change",()=>{
+            console.log("html change")
+            callReloadServer(AUTORELOAD_PORT);
+        })
     },
 
     async runWatch() {
         createServer(AUTORELOAD_PORT);
-        this.watchServer();
+        runServer();
+        this.watchHtml();
         this.buildFrontend("refresh");
         this.buildBackend("refresh");
 
