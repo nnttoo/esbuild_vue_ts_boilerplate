@@ -15,6 +15,13 @@ import { spawn } from 'child_process';
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const AUTORELOAD_PORT = Number(process.env.AUTORELOAD_PORT || '9090'); 
 
+const FILE_BACKEND_APP = "./output/app.js"
+const FILE_FRONTEND_APP = "./output/public/app.js"
+const FILE_FRONTEND_html = "./output/public/index.html"
+
+const FILE_FRONTEND_SRC = "./frontend/src/main.ts"
+const FILE_BACKEND_SRC = "./backend/src/main.ts"
+
 
 
 /**
@@ -29,18 +36,19 @@ function runServer(){
     serverSpawn = runSpawn({
         name: "server",
         bin: "node",
-        arg: ["./output/app.js"]
+        arg: [FILE_BACKEND_APP]
     });
 }
 function restartServer(){
     if(serverSpawn == null) return;
     serverSpawn.stop();
     runServer();
+    callReloadServer(AUTORELOAD_PORT);
 }
 
 function watchHtml() { 
     let watcher  = chokidar.watch([ 
-        "./output/public/index.html"
+        FILE_FRONTEND_html
     ],{
         persistent : true
     });
@@ -97,9 +105,9 @@ let funsList = {
  
         /** @type {esbuild.BuildOptions} */
         let buildOption = {
-            entryPoints: ["frontend/src/main.ts"],
+            entryPoints: [FILE_FRONTEND_SRC],
             bundle: true,
-            outfile: './output/public/app.js',
+            outfile: FILE_FRONTEND_APP,
             minify: true,
             platform: "browser",
             plugins: [
@@ -160,9 +168,9 @@ let funsList = {
 
         /** @type {esbuild.BuildOptions} */
         let buildOption = {
-            entryPoints: ['./backend/src/main.ts'],
+            entryPoints: [FILE_BACKEND_SRC],
             bundle: true,
-            outfile: './output/app.js',
+            outfile: FILE_BACKEND_APP,
             minify: true,
             platform: "node",
             plugins: [
