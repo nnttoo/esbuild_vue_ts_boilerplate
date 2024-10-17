@@ -24,7 +24,7 @@ Then, run:
 The browser will automatically refresh when changes occur in either the backend or frontend folder. To start the hot reload, you can use the following command:
 
 ```sh
-    node ./esbuild.mjs -f runWatch
+    npx tsx ./builder/builder.ts -f runWatch
 ```
 
 ## Configuration
@@ -48,11 +48,11 @@ NODE_ENV="production"
 Then, run the following command:
 
 ```sh
-./esbuild.mjs -f buildAll
+npx tsx ./builder/builder.ts -f buildAll
 ```
 
 To start the server, you can run this command:
 
 ```sh
-    ./esbuild.mjs -f runServer
+npx tsx ./builder/builder.ts -f runServer
 ```

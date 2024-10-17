@@ -20,7 +20,7 @@ dan jalankan
 Browser otomatis refresh ketika terjadi perubahan baik di folder backend maupun frontend, untuk memulainya anda bisa menggunakan command berikut ini :
 
 ```sh
-    node ./esbuild.mjs -f runWatch
+    npx tsx ./builder/builder.ts -f runWatch
 ```
 
 
@@ -45,13 +45,13 @@ NODE_ENV="production"
 kemudian jalankan perintah berikut ini :
 
 ```sh
-./esbuild.mjs -f buildAll
+npx tsx ./builder/builder.ts -f buildAll
 
 ```
 
 Untuk menjalankan server anda bisa mengetikan perintah berikut ini :
 
 ```sh
-    ./esbuild.mjs -f runServer
+npx tsx ./builder/builder.ts -f runServer
 
 ```

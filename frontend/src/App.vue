@@ -2,7 +2,7 @@
 </script>
 
 <template>
-  <h1>Test Fast Reloader</h1>    
+  <h1>Ini satu ini test</h1>      
   <div>test very Reload</div> 
 </template> 
 <style scoped>

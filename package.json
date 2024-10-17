@@ -14,8 +14,9 @@
     "commander": "^12.1.0",
     "dotenv": "^16.4.5",
     "esbuild": "^0.24.0",
-    "esbuild-plugin-vue3": "^0.4.2",  
-    "simplepagereloader": "^1.0.5"
+    "esbuild-plugin-vue3": "^0.4.2",
+    "simplepagereloader": "^1.0.5",
+    "tsx": "^4.19.1"
   },
   "dependencies": {
     "express": "^4.21.1",
