@@ -32,7 +32,9 @@ class Builder{
         this.serverSpawn = runSpawn({
             name: "server",
             bin: "node",
-            arg: [FILE_BACKEND_APP]
+            arg: ["./app.js"],
+            cwd : "./output",
+            sheel : false,
         }); 
     }
 
@@ -112,17 +114,6 @@ class Builder{
     }
 
     run(){
-        let argResult = this.readArg();
-        let parsedCommandArg = argResult.result;
-        if (parsedCommandArg == null ||
-            parsedCommandArg.fun == null ||
-            parsedCommandArg.fun == ""
-        ) {
-            console.log("Please use option -f or --fun");
-            argResult.program.help();
-            return;
-        }
-
         let listexporstFun : {[key : string] : any} ={
             "buildFrontend" : this.buildFrontend.bind(this),
             "buildBackend" : this.buildBackend.bind(this),
@@ -133,6 +124,22 @@ class Builder{
             },
             "runServer" : this.runServer.bind(this)
         }
+
+
+        let argResult = this.readArg();
+        let parsedCommandArg = argResult.result;
+        if (parsedCommandArg == null ||
+            parsedCommandArg.fun == null ||
+            parsedCommandArg.fun == ""
+        ) {
+            console.log("Please use option -f or --fun");
+            
+            console.log(Object.keys(listexporstFun));
+            argResult.program.help();
+            return;
+        }
+
+        
     
         console.log(parsedCommandArg);
 
@@ -141,7 +148,11 @@ class Builder{
         )   {
 
             listexporstFun[parsedCommandArg.fun](parsedCommandArg.arg)
-        }
+            return;
+        } 
+
+        
+        console.log(Object.keys(listexporstFun));
     }
 }
 

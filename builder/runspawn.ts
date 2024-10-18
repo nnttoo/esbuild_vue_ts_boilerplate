@@ -4,8 +4,17 @@ export type SpawnTools = {
     stop : ()=>void;
 }
 
-export function runSpawn(myarg) : SpawnTools {
-    const command = spawn(myarg.bin, myarg.arg);
+export function runSpawn(myarg : {
+    bin : string,
+    name : string,
+    arg : string[],
+    cwd : string | undefined,
+    sheel : boolean,
+}) : SpawnTools {
+    let command = spawn(myarg.bin, myarg.arg,{
+        cwd : myarg.cwd,
+        shell : myarg.sheel,
+    });
 
     let print = (msgIn) => {
         let msg = msgIn + "";
