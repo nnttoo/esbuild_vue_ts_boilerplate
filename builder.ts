@@ -10,10 +10,12 @@ dotenv.config();
 import { spawn } from 'child_process';  
 import { runSpawn, SpawnTools } from './builder_runspawn';
 
-
-const NODE_ENV = process.env.NODE_ENV || 'development';
+ 
 const AUTORELOAD_PORT = Number(process.env.AUTORELOAD_PORT || '9090');  
-const FILE_FRONTEND_html = "./output/public/index.html"  
+const PATH_FRONTEND_html = "./output/public/index.html"  
+const PATH_OUT_FOLDER = "./output";
+const PATH_FRONTEND_FOLDER = "./frontend";
+const PATH_BACKEND_FOLDER = "./backend";
 
 class Builder{
     serverSpawn : SpawnTools | null;
@@ -25,7 +27,7 @@ class Builder{
             name: "server",
             bin: "node",
             arg: ["./app.js"],
-            cwd : "./output",
+            cwd : PATH_OUT_FOLDER,
             sheel : false,
         }); 
     }
@@ -39,7 +41,7 @@ class Builder{
 
     watchHtml() { 
         let watcher  = chokidar.watch([ 
-            FILE_FRONTEND_html
+            PATH_FRONTEND_html
         ],{
             persistent : true
         });
@@ -60,7 +62,7 @@ class Builder{
 
         runSpawn({
             name : "buildbackend",
-            cwd : "./frontend",
+            cwd : PATH_FRONTEND_FOLDER,
             bin : "npx",
             arg : ["tsx ./builder_frontend.ts " + watchCommand],
             sheel : true 
@@ -77,7 +79,7 @@ class Builder{
 
         runSpawn({
             name : "buildbackend",
-            cwd : "./backend",
+            cwd : PATH_BACKEND_FOLDER,
             bin : "npx",
             arg : ["tsx ./builder_backend.ts " + watchCommand],
             sheel : true,
