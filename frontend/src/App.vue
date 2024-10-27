@@ -2,8 +2,7 @@
 </script>
 
 <template>
-  <h1>Ini satu ini test</h1>      
-  <div>test very Reload</div> 
+  <h1>Ini satu ini test</h1>    
 </template> 
 <style scoped>
 .logo {

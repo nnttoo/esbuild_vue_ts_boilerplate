@@ -10,6 +10,7 @@ export function runSpawn(myarg : {
     arg : string[],
     cwd : string | undefined,
     sheel : boolean,
+    onData? : (s : string)=>void;
 }) : SpawnTools {
     let command = spawn(myarg.bin, myarg.arg,{
         cwd : myarg.cwd,
@@ -22,6 +23,9 @@ export function runSpawn(myarg : {
         console.log(`[${myarg.name}] ${msg}`);
     }
     command.stdout.on('data', (data) => {
+        if(myarg.onData){
+            myarg.onData(data + "");
+        }
         print(data);
     });
     command.stderr.on('data', (data) => {

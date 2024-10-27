@@ -2,17 +2,18 @@ import vuePlugin from "esbuild-plugin-vue3";
 import { callReloadServer } from "simplepagereloader/server";
 import * as esbuild from 'esbuild'
 import fs from "fs/promises"
+import { Command } from "commander";
 
-export async function buildFrontend(arg : {
+async function buildFrontend(arg : {
     iswatch : boolean,
-    FILE_FRONTEND_SRC : string,
-    FILE_FRONTEND_APP : string,
+    FILE_INPUT : string,
+    FILE_OUTPUT : string,
     AUTORELOAD_PORT : number,
     NODE_ENV : string,
 }) { 
     let iswatch = arg.iswatch;
-    let FILE_FRONTEND_SRC = arg.FILE_FRONTEND_SRC;
-    let FILE_FRONTEND_APP = arg.FILE_FRONTEND_APP;
+    let fileInput = arg.FILE_INPUT;
+    let fileOutput = arg.FILE_OUTPUT;
     let AUTORELOAD_PORT = arg.AUTORELOAD_PORT;
     let NODE_ENV = arg.NODE_ENV;
 
@@ -21,9 +22,9 @@ export async function buildFrontend(arg : {
 
     /** @type {esbuild.BuildOptions} */
     let buildOption = {
-        entryPoints: [FILE_FRONTEND_SRC],
+        entryPoints: [fileInput],
         bundle: true,
-        outfile: FILE_FRONTEND_APP,
+        outfile: fileOutput,
         minify: true,
         platform: "browser",
         plugins: [
@@ -78,3 +79,37 @@ export async function buildFrontend(arg : {
     }
 
 }
+
+function run(){
+    const program = new Command();
+    program
+        .option('-w, --watch <string>', 'Insert  AUTORELOAD_PORT', "") 
+
+    program.parse(process.argv);
+    let opt = program.opts<{
+        watch : string
+    }>();
+
+    let autoreloadPort = 8989;
+    let nodeEnv = "production";
+    let iswatch = opt.watch != "";
+
+    if(iswatch){
+        autoreloadPort = Number(opt.watch);
+        nodeEnv = "development";
+    }
+
+ 
+    console.log(opt);
+
+    buildFrontend({
+        FILE_INPUT : "./src/main.ts", 
+        FILE_OUTPUT : "../output/public/app.js",
+        AUTORELOAD_PORT : autoreloadPort, 
+        NODE_ENV : nodeEnv,
+        iswatch :iswatch, 
+    })
+
+}
+
+run();

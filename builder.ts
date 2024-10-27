@@ -7,21 +7,13 @@ import { callReloadServer, createServer } from "simplepagereloader/server"
 import chokidar from "chokidar" 
 dotenv.config();
 
-import { spawn } from 'child_process';
-import { runSpawn, SpawnTools } from './runspawn'; 
-import { buildFrontend } from './builder_frontend';
-import { buildBackend } from './builder_backend';
-
+import { spawn } from 'child_process';  
+import { runSpawn, SpawnTools } from './builder_runspawn';
 
 
 const NODE_ENV = process.env.NODE_ENV || 'development';
-const AUTORELOAD_PORT = Number(process.env.AUTORELOAD_PORT || '9090'); 
-
-const FILE_BACKEND_APP = "./output/app.js"
-const FILE_FRONTEND_APP = "./output/public/app.js"
-const FILE_FRONTEND_html = "./output/public/index.html" 
-const FILE_FRONTEND_SRC = "./frontend/src/main.ts"
-const FILE_BACKEND_SRC = "./backend/src/main.ts" 
+const AUTORELOAD_PORT = Number(process.env.AUTORELOAD_PORT || '9090');  
+const FILE_FRONTEND_html = "./output/public/index.html"  
 
 class Builder{
     serverSpawn : SpawnTools | null;
@@ -58,25 +50,45 @@ class Builder{
         })
     }
 
-    async buildFrontend(iswatch : string){ 
-        await buildFrontend({
-            AUTORELOAD_PORT : AUTORELOAD_PORT,
-            FILE_FRONTEND_APP : FILE_FRONTEND_APP,
-            FILE_FRONTEND_SRC : FILE_FRONTEND_SRC,
-            iswatch : iswatch == "refresh",
-            NODE_ENV : NODE_ENV
-        });
+    async buildFrontend(refresh : string){ 
+        let iswatchB = refresh == "refresh";
+
+        let watchCommand = "";
+        if(iswatchB){
+            watchCommand = " -w " + AUTORELOAD_PORT
+        }
+
+        runSpawn({
+            name : "buildbackend",
+            cwd : "./frontend",
+            bin : "npx",
+            arg : ["tsx ./builder_frontend.ts " + watchCommand],
+            sheel : true 
+        });  
     }
 
-    async buildBackend(iswatch : string){
-        await buildBackend({
-            FILE_BACKEND_APP : FILE_BACKEND_APP,
-            FILE_BACKEND_SRC : FILE_BACKEND_SRC,
-            iswatch : iswatch == "refresh",
-            restartServer : ()=>{
-                this.restartServer();
+    async buildBackend(refresh : string){
+        let iswatchB = refresh == "refresh";
+
+        let watchCommand = "";
+        if(iswatchB){
+            watchCommand = " -w"
+        }
+
+        runSpawn({
+            name : "buildbackend",
+            cwd : "./backend",
+            bin : "npx",
+            arg : ["tsx ./builder_backend.ts " + watchCommand],
+            sheel : true,
+            onData : (d)=>{
+
+                if(d.indexOf("CmsRestartServer") > -1){
+                    this.restartServer();
+                } 
             }
-        });
+
+        }); 
     }
 
     runWatch() {
