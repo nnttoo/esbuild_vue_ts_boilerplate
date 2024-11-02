@@ -1,24 +1,35 @@
 import vuePlugin from "esbuild-plugin-vue3";
-import { callReloadServer } from "simplepagereloader/server";
+import { callReloadServer } from "@builderlib/autoreload";
 import * as esbuild from 'esbuild'
 import fs from "fs/promises"
 import { Command } from "commander";
+import tailwindcss from "tailwindcss"
+import autoprefixer from "autoprefixer" 
+import path from "path"
 
-async function buildFrontend(arg : {
-    iswatch : boolean,
-    FILE_INPUT : string,
-    FILE_OUTPUT : string,
-    AUTORELOAD_PORT : number,
-    NODE_ENV : string,
-}) { 
+async function buildFrontend(arg: {
+    iswatch: boolean,
+    FILE_INPUT: string,
+    FILE_OUTPUT: string,
+    AUTORELOAD_PORT: number,
+    NODE_ENV: string,
+}) {
     let iswatch = arg.iswatch;
     let fileInput = arg.FILE_INPUT;
     let fileOutput = arg.FILE_OUTPUT;
     let AUTORELOAD_PORT = arg.AUTORELOAD_PORT;
     let NODE_ENV = arg.NODE_ENV;
 
-    
+
     let isreadyInjected = false;
+
+    let srcTailwind = (()=>{
+
+        let result = path.dirname(arg.FILE_INPUT);
+        result += "/**/*.{vue,ts}"
+
+        return result; 
+    })();
 
     /** @type {esbuild.BuildOptions} */
     let buildOption = {
@@ -28,19 +39,32 @@ async function buildFrontend(arg : {
         minify: true,
         platform: "browser",
         plugins: [
-            vuePlugin(),
+            vuePlugin({
+                postcss: {
+                    plugins: [
+                        tailwindcss({
+                            content: [srcTailwind],
+                            theme: {
+                                extend: {},
+                            },
+                            plugins: [],
+                        }),
+                        autoprefixer()
+                    ]
+                }
+            }),
             {
                 name: 'rebuild-notify',
                 setup(build) {
 
-                    build.onLoad({ filter: /.ts/gi }, async (args) => {  
-                        if (!iswatch) return; 
-                        if(isreadyInjected) return;
+                    build.onLoad({ filter: /.ts/gi }, async (args) => {
+                        if (!iswatch) return;
+                        if (isreadyInjected) return;
 
                         isreadyInjected = true;
                         let ctn = (await fs.readFile(args.path)).toString();
                         ctn += ` 
-                        import {simplePageReload} from "simplepagereloader/client";  
+                        import {simplePageReload } from "@builderlib/autoreload_client";  
                         simplePageReload(${AUTORELOAD_PORT}); 
                         `
 
@@ -64,7 +88,7 @@ async function buildFrontend(arg : {
         ],
 
         define: {
-            'process.env.NODE_ENV': JSON.stringify(NODE_ENV), 
+            'process.env.NODE_ENV': JSON.stringify(NODE_ENV),
         },
     }
 
@@ -80,34 +104,34 @@ async function buildFrontend(arg : {
 
 }
 
-function run(){
+function run() {
     const program = new Command();
     program
-        .option('-w, --watch <string>', 'Insert  AUTORELOAD_PORT', "") 
+        .option('-w, --watch <string>', 'Insert  AUTORELOAD_PORT', "")
 
     program.parse(process.argv);
     let opt = program.opts<{
-        watch : string
+        watch: string
     }>();
 
     let autoreloadPort = 8989;
     let nodeEnv = "production";
     let iswatch = opt.watch != "";
 
-    if(iswatch){
+    if (iswatch) {
         autoreloadPort = Number(opt.watch);
         nodeEnv = "development";
     }
 
- 
+
     console.log(opt);
 
     buildFrontend({
-        FILE_INPUT : "./src/main.ts", 
-        FILE_OUTPUT : "../output/public/app.js",
-        AUTORELOAD_PORT : autoreloadPort, 
-        NODE_ENV : nodeEnv,
-        iswatch :iswatch, 
+        FILE_INPUT: "./src/main.ts",
+        FILE_OUTPUT: "../output/public/app.js",
+        AUTORELOAD_PORT: autoreloadPort,
+        NODE_ENV: nodeEnv,
+        iswatch: iswatch,
     })
 
 }

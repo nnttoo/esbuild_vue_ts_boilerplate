@@ -1,0 +1,12 @@
+{
+  "compilerOptions": { 
+    "esModuleInterop": true, 
+    "allowJs": true,
+    "checkJs": false,  
+    "outDir": "../output/tsdir",
+    "paths": {
+      "@mytype/*" : ["../backend/src/types/*"],
+      "@builderlib/*" : ["../builderLib/*"]
+    }, 
+  }
+}

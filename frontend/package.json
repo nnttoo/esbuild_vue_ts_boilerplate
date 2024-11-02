@@ -1,0 +1,17 @@
+{
+  "name": "fms_serverui",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "bootstrap": "^5.3.3",
+    "esbuild-plugin-vue3": "^0.4.2",
+    "simplepagereloader": "^1.0.5",
+    "tailwindcss": "^3.4.14",
+    "autoprefixer": "^10.4.20",
+    "esbuild": "^0.24.0"
+  }
+}

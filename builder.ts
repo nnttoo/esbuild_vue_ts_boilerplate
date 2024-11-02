@@ -3,15 +3,15 @@ import fs from "fs/promises"
 import vuePlugin from 'esbuild-plugin-vue3';
 import { Command } from "commander";
 import dotenv from "dotenv"; 
-import { callReloadServer, createServer } from "simplepagereloader/server"
+import { callReloadServer, createServer } from "./builderLib/autoreload"
 import chokidar from "chokidar" 
 dotenv.config();
 
 import { spawn } from 'child_process';  
-import { runSpawn, SpawnTools } from './builder_runspawn';
+import { runSpawn, SpawnTools } from './builderLib/builder_runspawn';
 
  
-const AUTORELOAD_PORT = Number(process.env.AUTORELOAD_PORT || '9090');  
+let AUTORELOAD_PORT = 0;  
 const PATH_FRONTEND_html = "./output/public/index.html"  
 const PATH_OUT_FOLDER = "./output";
 const PATH_FRONTEND_FOLDER = "./frontend";
@@ -32,9 +32,9 @@ class Builder{
         }); 
     }
 
-    restartServer(){
+    async restartServer(){
         if(this.serverSpawn == null) return;
-        this.serverSpawn.stop();
+        await this.serverSpawn.stop();
         this.runServer();
         callReloadServer(AUTORELOAD_PORT);
     }
@@ -94,7 +94,8 @@ class Builder{
     }
 
     runWatch() {
-        createServer(AUTORELOAD_PORT);
+        let cserver =  createServer(0);
+        AUTORELOAD_PORT = cserver.port;
         this.runServer();
         this.watchHtml();
         this.buildFrontend("refresh");
